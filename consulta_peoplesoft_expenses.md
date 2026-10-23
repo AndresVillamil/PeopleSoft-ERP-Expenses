@@ -101,10 +101,9 @@ Al hacer una consulta general en `PS_EOAW_STEPINST` para un hilo específico (ej
 
 Diagnóstico de las dos filas en el Hilo 28294
 
+<img width="891" height="342" alt="image" src="https://github.com/user-attachments/assets/9dd9f1bd-5ee5-4685-8088-f1f14c929705" />
 
-Fila	EOAWSTEP_INSTANCE	EOAWSTEP_NBR	EOAWSTEP_TYPE	EOAWSTEP_STATUS	EOAWADHOC_BY
-1	450399	1	N (Normal)	K (Skipped / Omitido)	Vacío
-2	450400	1.01	E (Error)	A (Approved / Aprobado)	System
+
 
 Esto nos explica la secuencia cronológica exacta de lo que le ocurrió a este informe de gastos:
 
