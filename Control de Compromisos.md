@@ -40,3 +40,42 @@ Cuando una TA o una Hoja de Gastos queda retenida por un error presupuestario, l
 3. Anulación manual (Override): Si el usuario cuenta con los permisos de seguridad adecuados, puede ingresar a la pantalla de Excepciones de Control de Compromisos y forzar la aprobación de la transacción a pesar del error de fondos.
 
 Si tienes un documento específico retenido en este momento, indícame qué código o mensaje de error te aparece (por ejemplo, No Budget Exists o Exceeds Budget Tolerance) para poder guiarte paso a paso en su solución.
+
+<img width="846" height="326" alt="image" src="https://github.com/user-attachments/assets/0836dc73-10aa-4525-be81-8631b41dfae7" />
+
+En la imagen adjunta se observa la pantalla de Excepciones de Hoja de Gastos de PeopleSoft. El informe de gastos afectado tiene el ID Informe: 0000002343 y presenta un bloqueo crítico.
+A continuación, te explico el diagnóstico del error y cómo resolverlo:
+
+Diagnóstico del Error
+
+El sistema muestra dos excepciones de tipo Error con los siguientes datos comunes:
+- Business Unit: ACHCO
+- Grupo Contable: CC_GTO_CTR
+- Excepción: Presupuesto Inexistente
+Este error específico significa que no hay un presupuesto configurado o abierto en el módulo de Control de Compromisos (Commitment Control) para la combinación de códigos contables (ChartFields), el año fiscal o el periodo que se introdujo en las líneas de esta hoja de gastos. El sistema no puede validar si hay o no dinero porque la estructura del presupuesto para esa cuenta directamente no existe.
+
+---
+Pasos para Resolverlo
+
+Tienes tres rutas posibles para corregir este problema, dependiendo de tus permisos en el sistema:
+
+Opción 1: Validar y corregir los códigos contables (ChartFields)
+
+Es muy común que el error ocurra simplemente por haber seleccionado un departamento, proyecto, cuenta o fondo equivocado que no está presupuestado.
+1. Haz clic en la pestaña "Claves Contables Ppto" (junto a Sustitución Ppto). Ahí verás exactamente qué cuentas contables se ingresaron en las líneas 1 y 2.
+2. Si ves algún código erróneo, regresa a la Hoja de Gastos 0000002343, corrige la contabilidad con los códigos válidos de tu área y vuelve a ejecutar el proceso de Budget Checking.
+
+Opción 2: Solicitar la creación o apertura del presupuesto (Vía Finanzas)
+
+Si los códigos contables ingresados son 100% correctos y válidos para este gasto:
+1. Deberás contactar al administrador de presupuestos o al equipo de Finanzas/Gl de tu organización.
+2. Infórmales que necesitas que se cree o se active el presupuesto en el Grupo Contable CC_GTO_CTR para la Business Unit ACHCO bajo los códigos contables que aparecen en este reporte.
+3. Una vez que ellos lo den de alta o abran el periodo presupuestario, podrás volver a procesar tu informe de gastos.
+
+Opción 3: Forzar la transacción (Anulación / Override manual)
+
+Si cuentas con un perfil de aprobador financiero o administrador con permisos elevados de Control de Compromisos, puedes saltarte el bloqueo directamente desde esta pantalla:
+1. En la tabla inferior, marca la casilla de verificación bajo la columna "Sustituir Presupuesto" para ambas líneas con error.
+2. Alternativamente, puedes marcar la casilla superior "Sustituir Transacción" para autorizar el reporte completo.
+3. Guarda los cambios. El estado cambiará a "Anulado" (Overridden) y el documento podrá continuar su flujo normal de aprobación y pago.
+
