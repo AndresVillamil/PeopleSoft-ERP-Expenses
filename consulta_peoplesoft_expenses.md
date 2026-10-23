@@ -67,8 +67,10 @@ Como la gran mayoría de las hojas de gastos poseen montos positivos (mayores a 
 El XML de una instancia en ejecución del AWE expone la jerarquía lógica de los pasos, pero difiere ligeramente de las tablas físicas relacionales en la base de datos de PeopleSoft.
 
 ### Mapeo XML vs Tabla Física
-* Etiqueta lógica `<userstep>` $ightarrow$ Tabla física **`PS_EOAW_USERINST`**
-* Campo `EOAWTHREAD_ID` $ightarrow$ Tabla física **`PS_EOAW_STEPINST`** (Relacionadas por `EOAWSTEP_INSTANCE`)
+* Etiqueta lógica `<userstep>` $
+ightarrow$ Tabla física **`PS_EOAW_USERINST`**
+* Campo `EOAWTHREAD_ID` $
+ightarrow$ Tabla física **`PS_EOAW_STEPINST`** (Relacionadas por `EOAWSTEP_INSTANCE`)
 
 ### Consulta SQL: Identificar Usuarios Aprobadores en Espera
 Esta consulta realiza el puente correcto entre las tablas de instancias de pasos y de usuarios finales para extraer los IDs y nombres de los aprobadores asignados a un hilo del AWE (ejemplo con los rangos provistos del XML):
@@ -95,6 +97,33 @@ WHERE
 Al hacer una consulta general en `PS_EOAW_STEPINST` para un hilo específico (ej. `28294`), es normal obtener múltiples filas ya que el sistema guarda el registro histórico de transición de estados:
 1. **Fila con `EOAWSTEP_TYPE = N` (Normal) y `STATUS = K` (Skipped):** Indica que el paso de aprobación humana regular fue omitido de forma directa (debido al error de criterio *"Menor que 0"*).
 2. **Fila con `EOAWSTEP_TYPE = E` (Error Step), `STATUS = A` (Approved) y `EOAWADHOC_BY = System`:** Indica el sub-paso decimal (`.01`) de contingencia creado de forma automática por el servidor de aplicaciones (*System*) para auto-aprobar la transacción ante la falta de una ruta válida aplicable.
+
+
+Diagnóstico de las dos filas en el Hilo 28294
+
+
+Fila	EOAWSTEP_INSTANCE	EOAWSTEP_NBR	EOAWSTEP_TYPE	EOAWSTEP_STATUS	EOAWADHOC_BY
+1	450399	1	N (Normal)	K (Skipped / Omitido)	Vacío
+2	450400	1.01	E (Error)	A (Approved / Aprobado)	System
+
+Esto nos explica la secuencia cronológica exacta de lo que le ocurrió a este informe de gastos:
+
+Fila 1 (La transacción original que falló):
+
+- EOAWSTEP_NBR = 1 y EOAWSTEP_TYPE = N (Normal): Este fue el paso de aprobación estándar que se activó cuando el usuario envió el informe.
+- EOAWSTEP_STATUS = K (Skipped): El sistema omitió o saltó este paso humano. ¿Por qué? Debido al error lógico en los criterios que descubrimos antes (la regla del monto Menor que 0). Al no cumplirse la condición, el motor saltó el paso normal de aprobación y lo marcó con estado K.
+
+Fila 2 (La respuesta automática del sistema):
+
+- EOAWSTEP_NBR = 1.01: Cuando un paso se rompe o se altera administrativamente, el sistema no sobrescribe la fila anterior; crea un sub-paso decimal (.01) para dejar evidencia de la excepción.
+- EOAWSTEP_TYPE = E (Error Step): Al saltarse el flujo normal, la transacción activó las propiedades de contingencia por error del AWE.
+- EOAWSTEP_STATUS = A (Approved) y EOAWADHOC_BY = System: Como tenías encendida la casilla "Aprobación Auto Usuario", el proceso automático del System (el servidor de aplicaciones) tomó el control del sub-paso de error y lo aprobó de forma automática al instante, cerrando el ciclo de evaluación técnica del AWE.
+
+Conclusión
+
+La tabla tiene dos registros porque el AWE genera una nueva instancia cada vez que un paso cambia de naturaleza (de normal a error, o cuando se realiza una reasignación/reconfiguración).
+En este caso específico, la Fila 1 es el rastro del flujo humano que fue ignorado, y la Fila 2 es el rastro del sistema forzando la auto-aprobación del reporte. Una vez que apliques el cambio en los criterios a "Mayor Que 0", verás que el sistema dejará de crear estas filas de error (E) automáticas y mantendrá el estado P (Pendiente) en el paso normal.
+
 
 ---
 *Nota: Este documento sirve como especificación técnica para revisiones de soporte interno con el equipo de infraestructura o mesa de control de PeopleSoft Financials.*
